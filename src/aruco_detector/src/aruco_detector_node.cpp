@@ -9,7 +9,7 @@
 #include <cv_bridge/cv_bridge.hpp>
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/objdetect/aruco_detector.hpp>
+#include <opencv2/aruco.hpp>
 #include <opencv2/objdetect/aruco_dictionary.hpp>
 
 class ArucoDetectorNode : public rclcpp::Node
