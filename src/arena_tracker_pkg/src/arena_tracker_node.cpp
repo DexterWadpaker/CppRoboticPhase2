@@ -10,11 +10,11 @@
 class ArenaTrackerNode : public rclcpp::Node {
 public:
     ArenaTrackerNode() : Node("arena_tracker_node"), v_max_(160.0), s_max_(85.0) {
-        // Создаем ROS 2 паблишеры вместо UDP
+        // Створюємо ROS 2 паблішери замість UDP
         robot_pub_ = this->create_publisher<geometry_msgs::msg::Point>("robot_position", 10);
         obstacles_pub_ = this->create_publisher<geometry_msgs::msg::Polygon>("obstacles_positions", 10);
 
-        // Подключаемся к камере (0 - дефолтный индекс)
+        // Підключаємось до камери (0 - дефолтний індекс)
         cap_.open(0);
         if (!cap_.isOpened()) {
             RCLCPP_ERROR(this->get_logger(), "❌ Не удалось открыть камеру!");
@@ -31,13 +31,13 @@ public:
         cv::namedWindow("Brain Tracker", cv::WINDOW_AUTOSIZE);
         cv::namedWindow("Debug: Mask", cv::WINDOW_AUTOSIZE);
 
-        // Таймер, который крутит цикл обработки (~30 FPS)
+        // Таймер, котрий крутить цикл обробкии (~30 FPS)
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(33),
             std::bind(&ArenaTrackerNode::process_frame, this)
         );
 
-        RCLCPP_INFO(this->get_logger(), "✅ C++ Трекер запущен! Публикация в /robot_position и /obstacles_positions");
+        RCLCPP_INFO(this->get_logger(), "✅ C++ Трекер запущений! Публикація в /robot_position и /obstacles_positions");
     }
 
 private:
@@ -54,7 +54,7 @@ private:
         cv::Scalar upper_black(180, s_max_, v_max_);
         cv::inRange(hsv, lower_black, upper_black, black_mask);
 
-        // Морфология для склеивания силуэта
+        // Морфологія для склеювання силуету
         cv::Mat kernel = cv::Mat();
         cv::Mat temp_mask;
         cv::dilate(black_mask, temp_mask, kernel, cv::Point(-1, -1), 6);
@@ -101,7 +101,7 @@ private:
             }
         }
 
-        // --- ФОРМИРОВАНИЕ ROS 2 СООБЩЕНИЙ ---
+        // --- ФОРМУВАННЯ ROS 2 ПОВІДОМЛЕНЬ ---
         geometry_msgs::msg::Point robot_msg;
         geometry_msgs::msg::Polygon obstacles_msg;
 
@@ -110,7 +110,7 @@ private:
             robot_cy_cm = (best_robot_rect.y + best_robot_rect.height / 2.0) * px_to_cm_y_;
             robot_found = true;
 
-            // X и Y — координаты. Z используем как флаг: 1.0 (найден), 0.0 (потерян)
+            // X та Y — координати. Z використовуємо як флаг: 1.0 (знайдено), 0.0 (загублено)
             robot_msg.x = robot_cx_cm;
             robot_msg.y = robot_cy_cm;
             robot_msg.z = 1.0; 
@@ -124,10 +124,10 @@ private:
             int radius_px = DETECTION_RADIUS_CM / px_to_cm_x_;
             cv::circle(frame, cv::Point(cx_px, cy_px), radius_px, cv::Scalar(0, 255, 0), 1);
         } else {
-            robot_msg.z = 0.0; // Флаг потери робота
+            robot_msg.z = 0.0; // Флаг загублення робота
         }
 
-        // Анализ препятствий внутри зоны радара
+        // Аналіз перешкод всередині зони радару
         for (const auto& obs : raw_obstacles) {
             if (robot_found) {
                 double dx = obs.second.x - robot_cx_cm;
@@ -138,7 +138,7 @@ private:
                     geometry_msgs::msg::Point32 p;
                     p.x = obs.second.x;
                     p.y = obs.second.y;
-                    p.z = distance; // Можно передавать саму дистанцию в Z
+                    p.z = distance; // Можна передавати саму дистанцію в Z
                     obstacles_msg.points.push_back(p);
 
                     cv::rectangle(frame, obs.first, cv::Scalar(0, 0, 255), 2);
@@ -146,11 +146,11 @@ private:
             }
         }
 
-        // ПУБЛИКАЦИЯ В ТОПИКИ
+        // ПУБЛИКАЦІЯ В ТОПІКИ
         robot_pub_->publish(robot_msg);
         obstacles_pub_->publish(obstacles_msg);
 
-        // Отрисовка интерфейса и калибровки
+        // Відрисовка інтерфейсу та калібровки
         cv::putText(frame, "V Max (Brightness): " + std::to_string((int)v_max_), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
         cv::putText(frame, "S Max (Color): " + std::to_string((int)s_max_), cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
         
