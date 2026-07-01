@@ -17,7 +17,7 @@ public:
         // Підключаємось до камери (0 - дефолтний індекс)
         cap_.open(0);
         if (!cap_.isOpened()) {
-            RCLCPP_ERROR(this->get_logger(), "❌ Не удалось открыть камеру!");
+            RCLCPP_ERROR(this->get_logger(), "❌ Не вдалось відкрити камеру!");
             rclcpp::shutdown();
             return;
         }
